@@ -24,7 +24,7 @@ export async function POST(req: Request) {
   if (event.type === 'checkout.session.completed') {
     const subscription = await stripe.subscriptions.retrieve(
       session.subscription as string
-    );
+    ) as any;
 
     if (!session?.metadata?.userId) {
       return new NextResponse('User ID is required in metadata', { status: 400 });
@@ -45,7 +45,7 @@ export async function POST(req: Request) {
   if (event.type === 'invoice.payment_succeeded') {
     const subscription = await stripe.subscriptions.retrieve(
       session.subscription as string
-    );
+    ) as any;
 
     await prisma.user.update({
       where: { stripeSubscriptionId: subscription.id },
