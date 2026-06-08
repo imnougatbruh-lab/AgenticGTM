@@ -1,0 +1,246 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            Int
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model campaign_links {
+  id           Int       @id @default(autoincrement())
+  product_id   Int?
+  source       String?   @db.VarChar
+  original_url String?   @db.VarChar
+  clicks       Int?
+  conversions  Int?
+  created_at   DateTime? @db.Timestamp(6)
+  products     products? @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([id], map: "ix_campaign_links_id")
+}
+
+model competitors {
+  id         Int       @id @default(autoincrement())
+  product_id Int?
+  name       String?   @db.VarChar
+  url        String?   @db.VarChar
+  tagline    String?   @db.VarChar
+  listings   String?
+  created_at DateTime? @db.Timestamp(6)
+  products   products? @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([id], map: "ix_competitors_id")
+}
+
+model content_posts {
+  id            Int       @id @default(autoincrement())
+  product_id    Int?
+  platform      String?   @db.VarChar
+  content       String?
+  status        String?   @db.VarChar
+  scheduled_for DateTime? @db.Timestamp(6)
+  posted_at     DateTime? @db.Timestamp(6)
+  impressions   Int?
+  clicks        Int?
+  products      products? @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([id], map: "ix_content_posts_id")
+}
+
+model icp_profiles {
+  id                  Int       @id @default(autoincrement())
+  product_id          Int?      @unique
+  ideal_job_titles    String?
+  top_channels        String?
+  core_pain_points    String?
+  refined_positioning String?
+  updated_at          DateTime? @db.Timestamp(6)
+  products            products? @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([id], map: "ix_icp_profiles_id")
+}
+
+model outreach_sequences {
+  id             Int              @id @default(autoincrement())
+  lead_id        Int?
+  current_step   Int?
+  status         String?          @db.VarChar
+  last_action_at DateTime?        @db.Timestamp(6)
+  created_at     DateTime?        @db.Timestamp(6)
+  social_leads   social_leads?    @relation(fields: [lead_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  sequence_steps sequence_steps[]
+
+  @@index([id], map: "ix_outreach_sequences_id")
+}
+
+model products {
+  id             Int              @id @default(autoincrement())
+  owner_id       Int?
+  name           String?          @db.VarChar
+  url            String?          @db.VarChar
+  github_url     String?          @db.VarChar
+  description    String?
+  tagline        String?          @db.VarChar
+  created_at     DateTime?        @db.Timestamp(6)
+  campaign_links campaign_links[]
+  competitors    competitors[]
+  content_posts  content_posts[]
+  icp_profiles   icp_profiles?
+  users          User?           @relation(fields: [owner_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  social_leads   social_leads[]
+  submissions    submissions[]
+  testimonials   testimonials[]
+
+  @@index([id], map: "ix_products_id")
+}
+
+model sequence_steps {
+  id                 Int                 @id @default(autoincrement())
+  sequence_id        Int?
+  step_number        Int?
+  channel            String?             @db.VarChar
+  draft_content      String?
+  status             String?             @db.VarChar
+  scheduled_for      DateTime?           @db.Timestamp(6)
+  sent_at            DateTime?           @db.Timestamp(6)
+  outreach_sequences outreach_sequences? @relation(fields: [sequence_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([id], map: "ix_sequence_steps_id")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       Int
+  expires      DateTime
+  user         User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model social_credentials {
+  id              Int       @id @default(autoincrement())
+  user_id         Int?
+  platform        String?   @db.VarChar
+  username        String?   @db.VarChar
+  password        String?   @db.VarChar
+  session_cookies String?
+  created_at      DateTime? @db.Timestamp(6)
+  users           User?    @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([id], map: "ix_social_credentials_id")
+}
+
+model social_leads {
+  id                 Int                  @id @default(autoincrement())
+  product_id         Int?
+  platform           String?              @db.VarChar
+  thread_title       String?              @db.VarChar
+  source_url         String?              @db.VarChar
+  context_snippet    String?
+  draft_reply        String?
+  status             String?              @db.VarChar
+  posted_at          DateTime?            @db.Timestamp(6)
+  created_at         DateTime?            @db.Timestamp(6)
+  outreach_sequences outreach_sequences[]
+  products           products?            @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([id], map: "ix_social_leads_id")
+}
+
+model submissions {
+  id              Int       @id @default(autoincrement())
+  product_id      Int?
+  directory_name  String?   @db.VarChar
+  directory_url   String?   @db.VarChar
+  status          String?   @db.VarChar
+  submission_url  String?   @db.VarChar
+  submitted_at    DateTime? @db.Timestamp(6)
+  last_checked_at DateTime? @db.Timestamp(6)
+  products        products? @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([id], map: "ix_submissions_id")
+}
+
+model testimonials {
+  id             Int       @id @default(autoincrement())
+  product_id     Int?
+  client_name    String?   @db.VarChar
+  client_role    String?   @db.VarChar
+  client_company String?   @db.VarChar
+  rating         Int?
+  review_text    String?
+  created_at     DateTime? @db.Timestamp(6)
+  products       products? @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([id], map: "ix_testimonials_id")
+}
+
+model User {
+  id                 Int                  @id @default(autoincrement())
+  email              String?              @unique(map: "ix_users_email") @db.VarChar
+  clerk_id           String?              @unique(map: "ix_users_clerk_id") @db.VarChar
+  created_at         DateTime?            @db.Timestamp(6)
+  emailVerified      DateTime?
+  image              String?
+  name               String?
+  
+  // Stripe Billing Fields
+  stripeCustomerId       String?   @unique @map(name: "stripe_customer_id")
+  stripeSubscriptionId   String?   @unique @map(name: "stripe_subscription_id")
+  stripePriceId          String?   @map(name: "stripe_price_id")
+  stripeCurrentPeriodEnd DateTime? @map(name: "stripe_current_period_end")
+  plan                   String    @default("HOBBY")
+  searches_count         Int       @default(0)
+  last_search_date       DateTime? @db.Timestamp(6)
+
+  accounts           Account[]
+  products           products[]
+  sessions           Session[]
+  social_credentials social_credentials[]
+
+  @@index([id], map: "ix_users_id")
+  @@map("users")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+model waitlist {
+  id              Int       @id @default(autoincrement())
+  email           String    @unique(map: "ix_waitlist_email") @db.VarChar
+  name            String?   @db.VarChar
+  company         String?   @db.VarChar
+  role            String?   @db.VarChar
+  referral_source String?   @db.VarChar
+  status          String?   @db.VarChar
+  created_at      DateTime? @db.Timestamp(6)
+  invited_at      DateTime? @db.Timestamp(6)
+
+  @@index([id], map: "ix_waitlist_id")
+}

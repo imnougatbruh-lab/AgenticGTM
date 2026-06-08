@@ -1,0 +1,8 @@
+.env
+frontend/.env.local
+.venv/
+__pycache__/
+playwright_profiles/
+user_data/
+*.db
+*.sqlite3
