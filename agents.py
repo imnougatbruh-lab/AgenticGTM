@@ -72,7 +72,7 @@ def scrape_website(url: str):
             page.goto(url, wait_until="load", timeout=30000)
             
             import time
-            time.sleep(6) # Give it 6 seconds to complete rendering/JS challenges
+            time.sleep(2) # Give it 2 seconds to complete rendering/JS challenges
             
             title = page.title()
             page_text = page.inner_text("body")
@@ -112,7 +112,7 @@ async def analyze_product(url: str):
     print("--- ANALYZING WITH GEMINI 2.5 FLASH ---")
     try:
         response = client.models.generate_content(
-            model='gemini-3.5-flash',
+            model='gemini-2.5-flash',
             contents=prompt,
             config={'response_mime_type': 'application/json'}
         )
@@ -151,7 +151,7 @@ async def generate_copy(product_data: dict):
     print("--- GENERATING COPY WITH GEMINI 2.5 FLASH ---")
     try:
         response = client.models.generate_content(
-            model='gemini-3.5-flash',
+            model='gemini-2.5-flash',
             contents=prompt,
             config={'response_mime_type': 'application/json'}
         )
@@ -284,7 +284,7 @@ def fill_form_playwright(submit_url: str, product_data: dict, screenshot_path: s
             
             print("Mapping form fields with Gemini 2.5 Flash...")
             response = client.models.generate_content(
-                model='gemini-3.5-flash',
+                model='gemini-2.5-flash',
                 contents=prompt,
                 config={'response_mime_type': 'application/json'}
             )
@@ -577,7 +577,7 @@ def listen_and_draft_replies(product_data: dict, testimonials: list, discussions
     try:
         print(f"Scouting {len(discussions)} threads in a SINGLE batch with Gemini 2.5 Flash...")
         response = client.models.generate_content(
-            model='gemini-3.5-flash',
+            model='gemini-2.5-flash',
             contents=prompt,
             config={'response_mime_type': 'application/json'}
         )
@@ -841,7 +841,7 @@ async def refine_icp(product_data: dict, testimonials: list[dict], analytics_dat
     print("--- SYNTHESIZING REFINED ICP WITH GEMINI 2.5 FLASH ---")
     try:
         response = client.models.generate_content(
-            model='gemini-3.5-flash',
+            model='gemini-2.5-flash',
             contents=prompt,
             config={'response_mime_type': 'application/json'}
         )
@@ -903,7 +903,7 @@ def discover_competitor_stealth(url: str):
             
             print("--- ANALYZING COMPETITOR DATA WITH GEMINI 2.5 FLASH ---")
             response = client.models.generate_content(
-                model='gemini-3.5-flash',
+                model='gemini-2.5-flash',
                 contents=prompt,
                 config={'response_mime_type': 'application/json'}
             )
@@ -969,7 +969,7 @@ async def generate_outreach_sequence(product_data: dict, lead_context: dict):
     print("--- GENERATING OUTREACH SEQUENCE WITH GEMINI 2.5 FLASH ---")
     try:
         response = client.models.generate_content(
-            model='gemini-3.5-flash',
+            model='gemini-2.5-flash',
             contents=prompt,
             config={'response_mime_type': 'application/json'}
         )
