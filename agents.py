@@ -992,7 +992,7 @@ async def scan_hackernews_leads(product_data: dict, testimonials: list, target_k
                 keyword = pain_points[0]
                 
     print(f"--- SEARCHING HACKERNEWS FOR LEAD KEYWORD: '{keyword}' ---")
-    url = f"https://hn.algolia.com/api/v1/search_by_date?query={keyword}&tags=comment&hitsPerPage=15"
+    url = f"https://hn.algolia.com/api/v1/search_by_date?query={keyword}&tags=comment&hitsPerPage=3"
     
     discussions = []
     try:
@@ -1023,7 +1023,7 @@ def scrape_reddit_stealth(keyword: str):
     try:
         print(f"--- STARTING AUTONOMOUS REDDIT SEARCH FOR '{keyword}' via DDGS ---")
         with DDGS() as ddgs:
-            results = list(ddgs.text(f'site:reddit.com "{keyword}"', max_results=10))
+            results = list(ddgs.text(f'site:reddit.com "{keyword}"', max_results=3))
             for r in results:
                 title = r.get("title", "")
                 url = r.get("href", "")
@@ -1071,7 +1071,7 @@ def scrape_twitter_stealth(keyword: str, user_id: int = 1):
     try:
         print(f"--- STARTING AUTONOMOUS TWITTER SEARCH FOR '{keyword}' via DDGS ---")
         with DDGS() as ddgs:
-            results = list(ddgs.text(f'site:twitter.com "{keyword}"', max_results=10))
+            results = list(ddgs.text(f'site:twitter.com "{keyword}"', max_results=3))
             for r in results:
                 title = r.get("title", "")
                 url = r.get("href", "")
@@ -1120,7 +1120,7 @@ def scrape_linkedin_stealth(keyword: str, user_id: int = 1):
     try:
         print(f"--- STARTING AUTONOMOUS LINKEDIN SEARCH FOR '{keyword}' via DDGS ---")
         with DDGS() as ddgs:
-            results = list(ddgs.text(f'site:linkedin.com/posts "{keyword}"', max_results=10))
+            results = list(ddgs.text(f'site:linkedin.com/posts "{keyword}"', max_results=3))
             for r in results:
                 title = r.get("title", "")
                 url = r.get("href", "")
