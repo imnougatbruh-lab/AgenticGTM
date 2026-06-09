@@ -100,7 +100,7 @@ export default function XyrocoLanding() {
 
   const fadeUp = {
     hidden: { opacity: 0, y: 30 },
-    show: { opacity: 1, y: 0, transition: { type: "spring", bounce: 0.4, duration: 1 } },
+    show: { opacity: 1, y: 0, transition: { type: "spring" as const, bounce: 0.4, duration: 1 } },
   };
 
   return (
