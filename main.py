@@ -1696,10 +1696,10 @@ async def generate_seo_blog(request: BlogGenerateRequest, db: Session = Depends(
     """
     
     try:
-        print(f"Generating technical B2B blog using Gemini 2.5 Flash...")
+        print(f"Generating technical B2B blog using Gemini 3.5 Flash...")
         
         response = client.models.generate_content(
-            model='gemini-2.5-flash',
+            model='gemini-3.5-flash',
             contents=prompt
         )
         text_response = response.text.strip()
