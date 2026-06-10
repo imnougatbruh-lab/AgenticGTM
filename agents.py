@@ -282,7 +282,7 @@ def fill_form_playwright(submit_url: str, product_data: dict, screenshot_path: s
             ]
             """
             
-            print("Mapping form fields with Gemini 2.5 Flash...")
+            print("Mapping form fields with Gemini 3.5 Flash...")
             response = client.models.generate_content(
                 model='gemini-3.5-flash',
                 contents=prompt,
@@ -575,7 +575,7 @@ def listen_and_draft_replies(product_data: dict, testimonials: list, discussions
     """
     
     try:
-        print(f"Scouting {len(discussions)} threads in a SINGLE batch with Gemini 2.5 Flash...")
+        print(f"Scouting {len(discussions)} threads in a SINGLE batch with Gemini 3.5 Flash...")
         response = client.models.generate_content(
             model='gemini-3.5-flash',
             contents=prompt,
@@ -991,8 +991,10 @@ async def scan_hackernews_leads(product_data: dict, testimonials: list, target_k
             if len(pain_points) > 0:
                 keyword = pain_points[0]
                 
+    import urllib.parse
+    encoded_keyword = urllib.parse.quote(keyword)
     print(f"--- SEARCHING HACKERNEWS FOR LEAD KEYWORD: '{keyword}' ---")
-    url = f"https://hn.algolia.com/api/v1/search_by_date?query={keyword}&tags=comment&hitsPerPage=3"
+    url = f"https://hn.algolia.com/api/v1/search_by_date?query={encoded_keyword}&tags=comment&hitsPerPage=3"
     
     discussions = []
     try:
