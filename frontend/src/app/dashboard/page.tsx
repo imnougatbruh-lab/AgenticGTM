@@ -1503,7 +1503,7 @@ export default function Dashboard() {
                                   key={dir.name} 
                                   className={`p-4 border border-zinc-200/60 dark:border-white/[0.08] rounded-[20px] bg-white dark:bg-[#0D0F12] flex items-center justify-between gap-6 transition-all duration-500 ${isLocked ? "opacity-60" : "shadow-[0_4px_24px_rgba(0,0,0,0.03)] hover:shadow-[0_12px_40px_rgba(0,0,0,0.06)]"}`}
                                 >
-                                  <div className={`min-w-0 flex-1 ${isLocked ? "blur-[2px] select-none" : ""}`}>
+                                  <div className={`min-w-0 flex-1 ${isLocked ? "blur-md select-none pointer-events-none opacity-50" : ""}`}>
                                     <div className="flex items-center gap-2">
                                       <span className="font-semibold text-sm text-zinc-950 dark:text-[#f8f9fa] flex items-center gap-2">
                                         {isLocked && <span className="text-xs">🔒</span>}
