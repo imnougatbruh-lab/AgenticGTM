@@ -1490,7 +1490,7 @@ export default function Dashboard() {
                               { name: "Reddit r/Startups", url: "https://www.reddit.com/r/startups/submit" }
                             ];
                             
-                            const planLimit = userPlan === "PRO" ? 53 : userPlan === "STARTER" ? 30 : 10;
+                            const planLimit = userPlan === "PRO" ? 53 : userPlan === "STARTER" ? 30 : 5;
                             
                             return ALL_DIRECTORIES.map((dir, idx) => {
                               const dbSub = submissions.find((s) => s.directory_name === dir.name);
@@ -1501,9 +1501,9 @@ export default function Dashboard() {
                               return (
                                 <div 
                                   key={dir.name} 
-                                  className={`p-4 border border-zinc-200/60 dark:border-white/[0.08] rounded-[20px] bg-white dark:bg-[#0D0F12] flex items-center justify-between gap-6 transition-all duration-500 ${isLocked ? "opacity-60 grayscale hover:grayscale-0" : "shadow-[0_4px_24px_rgba(0,0,0,0.03)] hover:shadow-[0_12px_40px_rgba(0,0,0,0.06)]"}`}
+                                  className={`p-4 border border-zinc-200/60 dark:border-white/[0.08] rounded-[20px] bg-white dark:bg-[#0D0F12] flex items-center justify-between gap-6 transition-all duration-500 ${isLocked ? "opacity-60" : "shadow-[0_4px_24px_rgba(0,0,0,0.03)] hover:shadow-[0_12px_40px_rgba(0,0,0,0.06)]"}`}
                                 >
-                                  <div className="min-w-0 flex-1">
+                                  <div className={`min-w-0 flex-1 ${isLocked ? "blur-[2px] select-none" : ""}`}>
                                     <div className="flex items-center gap-2">
                                       <span className="font-semibold text-sm text-zinc-950 dark:text-[#f8f9fa] flex items-center gap-2">
                                         {isLocked && <span className="text-xs">🔒</span>}
@@ -1522,10 +1522,10 @@ export default function Dashboard() {
                                       )}
                                     </div>
                                     <a 
-                                      href={dir.url} 
-                                      target="_blank" 
+                                      href={isLocked ? "#" : dir.url} 
+                                      target={isLocked ? "_self" : "_blank"} 
                                       rel="noopener noreferrer" 
-                                      className="text-[10px]  text-zinc-405 dark:text-[#6e7583] hover:text-zinc-950 dark:hover:text-white underline mt-1 block truncate"
+                                      className={`text-[10px] text-zinc-405 dark:text-[#6e7583] hover:text-zinc-950 dark:hover:text-white mt-1 block truncate ${!isLocked && "underline"}`}
                                     >
                                       {dir.url}
                                     </a>
@@ -1540,7 +1540,7 @@ export default function Dashboard() {
                                         }}
                                         className="px-3 py-1.5 text-xs bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/40 font-semibold rounded-xl transition-all duration-300 ease-out border border-amber-200 dark:border-amber-900/50 flex items-center gap-1.5"
                                       >
-                                        Unlock Directory
+                                        Upgrade to unlock
                                       </button>
                                     ) : (
                                       <>
