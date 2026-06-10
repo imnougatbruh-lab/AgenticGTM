@@ -12,5 +12,6 @@ pip install -r requirements.txt
 # Install Playwright Chromium and its Linux operating system dependencies
 echo "🎭 Installing Playwright Chromium & OS dependencies..."
 playwright install chromium
+playwright install-deps
 
 echo "🎯 Build pipeline completed successfully! App is ready for production start command."
