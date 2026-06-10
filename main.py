@@ -1703,30 +1703,38 @@ async def generate_seo_blog(request: BlogGenerateRequest, db: Session = Depends(
             contents=prompt
         )
         text_response = response.text.strip()
+    except Exception as primary_e:
+        print(f"Gemini 3.5 Flash failed (likely 503 Overloaded): {str(primary_e)}")
+        print("[Resilient Fallback] Re-routing to Gemini 2.5 Flash for SEO Blog generation...")
+        try:
+            response = client.models.generate_content(
+                model='gemini-2.5-flash',
+                contents=prompt
+            )
+            text_response = response.text.strip()
+        except Exception as fallback_e:
+            error_msg = str(fallback_e)
+            print(f"Error generating blog from Gemini Fallback: {error_msg}")
+            raise HTTPException(status_code=500, detail="Google's AI models are currently overloaded globally. Please try again in a few minutes.")
         
-        # Clean up potential markdown formatting that gemini might add
-        if text_response.startswith("```markdown"):
-            text_response = text_response.replace("```markdown", "", 1)
-        if text_response.startswith("```"):
-            text_response = text_response.replace("```", "", 1)
-        if text_response.endswith("```"):
-            text_response = text_response[:-3]
-        
-        text_response = text_response.strip()
-        
-        # Parse title and body naturally from markdown
-        lines = text_response.split("\n")
-        title = "Building a GTM Pipeline for Developers"
-        if lines and lines[0].startswith("#"):
-            title = lines[0].replace("#", "").strip()
-            body = "\n".join(lines[1:]).strip()
-        else:
-            body = text_response
-            
-    except Exception as e:
-        error_msg = str(e)
-        print(f"Error generating blog from Gemini: {error_msg}")
-        raise HTTPException(status_code=500, detail=f"Failed to generate the AI blog content. Please try again.")
+    # Clean up potential markdown formatting that gemini might add
+    if text_response.startswith("```markdown"):
+        text_response = text_response.replace("```markdown", "", 1)
+    if text_response.startswith("```"):
+        text_response = text_response.replace("```", "", 1)
+    if text_response.endswith("```"):
+        text_response = text_response[:-3]
+    
+    text_response = text_response.strip()
+    
+    # Parse title and body naturally from markdown
+    lines = text_response.split("\n")
+    title = "Building a GTM Pipeline for Developers"
+    if lines and lines[0].startswith("#"):
+        title = lines[0].replace("#", "").strip()
+        body = "\n".join(lines[1:]).strip()
+    else:
+        body = text_response
 
         
     try:
