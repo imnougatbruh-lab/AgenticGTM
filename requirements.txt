@@ -1,4 +1,4 @@
-﻿aiohappyeyeballs==2.6.2
+aiohappyeyeballs==2.6.2
 aiohttp==3.13.5
 aiosignal==1.4.0
 annotated-doc==0.0.4
@@ -15,6 +15,7 @@ colorama==0.4.6
 cryptography==48.0.0
 distro==1.9.0
 docstring_parser==0.18.0
+duckduckgo-search==7.3.0
 fastapi==0.136.1
 frozenlist==1.8.0
 google-ai-generativelanguage==0.6.15

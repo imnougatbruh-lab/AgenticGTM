@@ -992,8 +992,9 @@ async def scan_hackernews_leads(product_data: dict, testimonials: list, target_k
                 keyword = pain_points[0]
                 
     import urllib.parse
-    encoded_keyword = urllib.parse.quote(keyword)
-    print(f"--- SEARCHING HACKERNEWS FOR LEAD KEYWORD: '{keyword}' ---")
+    # Wrap in double quotes to force exact phrase matching in Algolia, then URL encode
+    encoded_keyword = urllib.parse.quote(f'"{keyword}"')
+    print(f"--- SEARCHING HACKERNEWS FOR EXACT LEAD KEYWORD: '{keyword}' ---")
     url = f"https://hn.algolia.com/api/v1/search_by_date?query={encoded_keyword}&tags=comment&hitsPerPage=3"
     
     discussions = []
@@ -1020,7 +1021,7 @@ def scrape_reddit_stealth(keyword: str):
     """
     Agent that bypasses Reddit's API blocks by querying DuckDuckGo.
     """
-    from ddgs import DDGS
+    from duckduckgo_search import DDGS
     discussions = []
     try:
         print(f"--- STARTING AUTONOMOUS REDDIT SEARCH FOR '{keyword}' via DDGS ---")
@@ -1068,7 +1069,7 @@ def scrape_twitter_stealth(keyword: str, user_id: int = 1):
     """
     Agent that bypasses Twitter's login wall by querying DuckDuckGo for Twitter discussions.
     """
-    from ddgs import DDGS
+    from duckduckgo_search import DDGS
     discussions = []
     try:
         print(f"--- STARTING AUTONOMOUS TWITTER SEARCH FOR '{keyword}' via DDGS ---")
@@ -1117,7 +1118,7 @@ def scrape_linkedin_stealth(keyword: str, user_id: int = 1):
     """
     Agent that bypasses LinkedIn's aggressive login wall by querying DuckDuckGo.
     """
-    from ddgs import DDGS
+    from duckduckgo_search import DDGS
     discussions = []
     try:
         print(f"--- STARTING AUTONOMOUS LINKEDIN SEARCH FOR '{keyword}' via DDGS ---")
