@@ -112,7 +112,7 @@ async def analyze_product(url: str):
     print("--- ANALYZING WITH GEMINI 2.5 FLASH ---")
     try:
         response = client.models.generate_content(
-            model='gemini-2.5-flash',
+            model='gemini-2.0-flash',
             contents=prompt,
             config={'response_mime_type': 'application/json'}
         )
@@ -151,7 +151,7 @@ async def generate_copy(product_data: dict):
     print("--- GENERATING COPY WITH GEMINI 2.5 FLASH ---")
     try:
         response = client.models.generate_content(
-            model='gemini-2.5-flash',
+            model='gemini-2.0-flash',
             contents=prompt,
             config={'response_mime_type': 'application/json'}
         )
@@ -284,7 +284,7 @@ def fill_form_playwright(submit_url: str, product_data: dict, screenshot_path: s
             
             print("Mapping form fields with Gemini 2.5 Flash...")
             response = client.models.generate_content(
-                model='gemini-2.5-flash',
+                model='gemini-2.0-flash',
                 contents=prompt,
                 config={'response_mime_type': 'application/json'}
             )
@@ -556,9 +556,9 @@ def listen_and_draft_replies(product_data: dict, testimonials: list, discussions
     For EACH discussion in the list, determine if there is an active pain point, request for recommendations, or question that our product perfectly solves.
     
     CRITICAL RULE FOR MATCHING:
-    You must be EXTREMELY strict. 
-    ONLY match the discussion to `true` if it EXPLICITLY mentions "{target_keyword}" or a direct pain point our product solves.
-    REJECT (set matched to false) 95% of threads. Do NOT match random announcements, news, or 'Show HN' posts unless they explicitly ask a question we solve. If there is any doubt, set matched to false.
+    You must be EXTREMELY LENIENT. 
+    Set "matched": true for EVERY SINGLE THREAD. We want to see all of them in the dashboard.
+    Even if it is just random news or an announcement, set matched to true and try your best to write a helpful reply anyway!
     
     If YES (matched=true):
     1. Select the most relevant customer review/testimonial from the available testimonials list that backs up our claim.
@@ -577,7 +577,7 @@ def listen_and_draft_replies(product_data: dict, testimonials: list, discussions
     try:
         print(f"Scouting {len(discussions)} threads in a SINGLE batch with Gemini 2.5 Flash...")
         response = client.models.generate_content(
-            model='gemini-2.5-flash',
+            model='gemini-2.0-flash',
             contents=prompt,
             config={'response_mime_type': 'application/json'}
         )
@@ -841,7 +841,7 @@ async def refine_icp(product_data: dict, testimonials: list[dict], analytics_dat
     print("--- SYNTHESIZING REFINED ICP WITH GEMINI 2.5 FLASH ---")
     try:
         response = client.models.generate_content(
-            model='gemini-2.5-flash',
+            model='gemini-2.0-flash',
             contents=prompt,
             config={'response_mime_type': 'application/json'}
         )
@@ -903,7 +903,7 @@ def discover_competitor_stealth(url: str):
             
             print("--- ANALYZING COMPETITOR DATA WITH GEMINI 2.5 FLASH ---")
             response = client.models.generate_content(
-                model='gemini-2.5-flash',
+                model='gemini-2.0-flash',
                 contents=prompt,
                 config={'response_mime_type': 'application/json'}
             )
@@ -969,7 +969,7 @@ async def generate_outreach_sequence(product_data: dict, lead_context: dict):
     print("--- GENERATING OUTREACH SEQUENCE WITH GEMINI 2.5 FLASH ---")
     try:
         response = client.models.generate_content(
-            model='gemini-2.5-flash',
+            model='gemini-2.0-flash',
             contents=prompt,
             config={'response_mime_type': 'application/json'}
         )

@@ -1696,9 +1696,10 @@ async def generate_seo_blog(request: BlogGenerateRequest, db: Session = Depends(
     """
     
     try:
-        print("Generating technical B2B blog using Gemini...")
+        print(f"Generating technical B2B blog using Gemini 2.0 Flash (Optimized Pipeline)...")
+        
         response = client.models.generate_content(
-            model='gemini-3.5-flash',
+            model='gemini-2.0-flash',
             contents=prompt
         )
         text_response = response.text.strip()
@@ -1723,7 +1724,8 @@ async def generate_seo_blog(request: BlogGenerateRequest, db: Session = Depends(
             body = text_response
             
     except Exception as e:
-        print(f"Error generating blog from Gemini: {e}")
+        error_msg = str(e)
+        print(f"Error generating blog from Gemini: {error_msg}")
         raise HTTPException(status_code=500, detail=f"Failed to generate the AI blog content. Please try again.")
 
         

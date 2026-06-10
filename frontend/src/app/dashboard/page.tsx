@@ -41,6 +41,7 @@ export default function Dashboard() {
   const [product, setProduct] = useState<any | null>(null);
   const [showUpgradeModal, setShowUpgradeModal] = useState<boolean>(false);
   const [upgradeMessage, setUpgradeMessage] = useState<string>("");
+  const [userPlan, setUserPlan] = useState<string>("FREE");
 
   const authFetch = async (url: string, options: any = {}) => {
     const headers = { ...options.headers };
@@ -545,21 +546,35 @@ export default function Dashboard() {
   };
 
   // Manual Blog Publisher trigger
-  const handlePublishBlog = async (postId: number) => {
+  const handlePublishBlog = async (postId: number, platform: string = "dev.to") => {
     setIsGeneratingBlog(true);
     try {
       const blog = posts.find((p: any) => p.id === postId) || selectedBlog;
       if (!blog) throw new Error("Blog post not found");
       await navigator.clipboard.writeText(blog.content);
-      showToast(`Copy successful! Opening Dev.to to publish.`, "success");
       
-      window.open("https://dev.to/new", "_blank");
+      if (platform === "linkedin") {
+        showToast(`Copy successful! Opening LinkedIn to publish.`, "success");
+        window.open("https://www.linkedin.com/post/new", "_blank");
+      } else {
+        showToast(`Copy successful! Opening Dev.to to publish.`, "success");
+        window.open("https://dev.to/new", "_blank");
+      }
+      
+      const prevStatus = blog.status || "draft";
+      let newStatus = "posted";
+      
+      if (platform === "linkedin") {
+        newStatus = prevStatus.includes("devto") ? "posted_both" : prevStatus === "posted_both" ? "posted_both" : "posted_linkedin";
+      } else {
+        newStatus = prevStatus.includes("linkedin") ? "posted_both" : prevStatus === "posted_both" ? "posted_both" : "posted_devto";
+      }
       
       // Update local posts list
       setPosts((prev) =>
         prev.map((post) =>
           post.id === postId
-            ? { ...post, status: "posted" }
+            ? { ...post, status: newStatus }
             : post
         )
       );
@@ -567,7 +582,7 @@ export default function Dashboard() {
       if (selectedBlog && selectedBlog.id === postId) {
         setSelectedBlog((prev: any) => ({
           ...prev,
-          status: "posted"
+          status: newStatus
         }));
       }
     } catch (err: any) {
@@ -1182,8 +1197,25 @@ export default function Dashboard() {
                   </div>
 
                   {/* CRM Pipeline Feed */}
-                  {leadsLoading ? (
-                    <div className="text-center py-12 text-zinc-400  text-sm">
+                  {scoutLoading ? (
+                    <div className="p-12 border border-zinc-200/60 dark:border-white/[0.04] rounded-2xl bg-white dark:bg-[#14161C] text-center space-y-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.01]">
+                      <div className="relative w-16 h-16 mx-auto flex items-center justify-center">
+                        <div className="absolute inset-0 rounded-full border-4 border-zinc-100 dark:border-white/[0.02]"></div>
+                        <div className="absolute inset-0 rounded-full border-4 border-t-emerald-500 animate-[spin_1s_linear_infinite]"></div>
+                        <div className="absolute inset-2 rounded-full border-4 border-b-cyan-500 animate-[spin_1.5s_linear_infinite_reverse]"></div>
+                      </div>
+                      <div className="space-y-3">
+                        <h3 className="text-lg font-semibold text-zinc-900 dark:text-white flex items-center justify-center gap-2">
+                          <span className="animate-pulse">⚡</span> Deploying AI Agents
+                        </h3>
+                        <p className="text-sm text-zinc-500 dark:text-zinc-400 max-w-sm mx-auto leading-relaxed">
+                          Stealth scraping Reddit, Twitter, HackerNews, and LinkedIn. 
+                          <br/><span className="text-emerald-600 dark:text-emerald-400 font-medium animate-pulse">Running Gemini 2.5 Flash intent analysis...</span>
+                        </p>
+                      </div>
+                    </div>
+                  ) : leadsLoading ? (
+                    <div className="text-center py-12 text-zinc-400 text-sm">
                       Loading social CRM lists from database...
                     </div>
                   ) : leads.length === 0 ? (
@@ -1401,62 +1433,148 @@ export default function Dashboard() {
                         </div>
                       ) : (
                         <div className="space-y-5">
-                          {submissions.map((sub) => (
-                            <div 
-                              key={sub.id} 
-                              className="p-4 border border-zinc-200/60 dark:border-white/[0.08] rounded-[20px] bg-white dark:bg-[#0D0F12] flex items-center justify-between gap-6 shadow-[0_4px_24px_rgba(0,0,0,0.03)] hover:shadow-[0_12px_40px_rgba(0,0,0,0.06)] transition-all duration-500"
-                            >
-                              <div className="min-w-0 flex-1">
-                                <div className="flex items-center gap-2">
-                                  <span className="font-semibold text-sm text-zinc-950 dark:text-[#f8f9fa]">{sub.directory_name}</span>
-                                  <span className={`px-2 py-0.5 text-[9px] font-bold rounded-xl  tracking-wider ${
-                                    sub.status === "submitted"
-                                      ? "bg-teal-50 dark:bg-teal-950/30 text-teal-700 dark:text-emerald-300"
-                                      : sub.status === "failed"
-                                      ? "bg-red-100 dark:bg-red-950/30 text-red-800 dark:text-red-300"
-                                      : "bg-zinc-100 dark:bg-white/[0.04] text-zinc-600 dark:text-[#8b919e]"
-                                  }`}>
-                                    {sub.status}
-                                  </span>
-                                </div>
-                                <a 
-                                  href={sub.directory_url} 
-                                  target="_blank" 
-                                  rel="noopener noreferrer" 
-                                  className="text-[10px]  text-zinc-405 dark:text-[#6e7583] hover:text-zinc-950 dark:hover:text-white underline mt-1 block truncate"
-                                >
-                                  {sub.directory_url}
-                                </a>
-                              </div>
+                          {(() => {
+                            const ALL_DIRECTORIES = [
+                              { name: "Product Hunt", url: "https://www.producthunt.com/posts/new" },
+                              { name: "Hacker News (Show HN)", url: "https://news.ycombinator.com/submit" },
+                              { name: "Indie Hackers", url: "https://www.indiehackers.com/products/new" },
+                              { name: "AlternativeTo", url: "https://alternativeto.net/software/add/" },
+                              { name: "G2", url: "https://www.g2.com/products/new" },
+                              { name: "Capterra", url: "https://www.capterra.com/vendors/new" },
+                              { name: "Trustpilot", url: "https://business.trustpilot.com/" },
+                              { name: "Crunchbase", url: "https://www.crunchbase.com/add-new" },
+                              { name: "Wellfound (AngelList)", url: "https://wellfound.com/companies/new" },
+                              { name: "Dev.to", url: "https://dev.to/new" },
+                              { name: "Betalist", url: "https://betalist.com/submit" },
+                              { name: "SaaSHub", url: "https://www.saashub.com/submit" },
+                              { name: "StartupStash", url: "https://startupstash.com/add-listing/" },
+                              { name: "There's An AI For That", url: "https://theresanaiforthat.com/submit/" },
+                              { name: "Futurepedia", url: "https://www.futurepedia.io/submit-tool" },
+                              { name: "AI Tool Hunt", url: "https://www.aitoolhunt.com/submit" },
+                              { name: "Toolify.ai", url: "https://www.toolify.ai/submit" },
+                              { name: "Starter Story", url: "https://www.starterstory.com/join" },
+                              { name: "StackShare", url: "https://stackshare.io/tools/new" },
+                              { name: "Slant", url: "https://www.slant.co/topics/new" },
+                              { name: "AppSumo", url: "https://sell.appsumo.com/" },
+                              { name: "Uneed", url: "https://www.uneed.best/submit" },
+                              { name: "Peerlist", url: "https://peerlist.io/projects/new" },
+                              { name: "Microlaunch", url: "https://microlaunch.net/submit" },
+                              { name: "1000 Tools", url: "https://1000.tools/submit" },
+                              { name: "F6S", url: "https://www.f6s.com/" },
+                              { name: "Software Advice", url: "https://www.softwareadvice.com/vendors/" },
+                              { name: "GetApp", url: "https://www.getapp.com/vendors/" },
+                              { name: "TrustRadius", url: "https://www.trustradius.com/vendor" },
+                              { name: "SaaSWorthy", url: "https://www.saasworthy.com/add-product" },
+                              { name: "SourceForge", url: "https://sourceforge.net/create/" },
+                              { name: "GoodFirms", url: "https://www.goodfirms.co/add-company" },
+                              { name: "Clutch", url: "https://clutch.co/get-listed" },
+                              { name: "BetaPage", url: "https://betapage.co/submit" },
+                              { name: "Launching Next", url: "https://www.launchingnext.com/submit/" },
+                              { name: "StartupBuffer", url: "https://startupbuffer.com/submit" },
+                              { name: "Hashnode", url: "https://hashnode.com/draft" },
+                              { name: "TechCrunch (Pitch)", url: "https://techcrunch.com/pages/pitch/" },
+                              { name: "Makerlog", url: "https://getmakerlog.com/" },
+                              { name: "WIP.co", url: "https://wip.co/" },
+                              { name: "PitchWall", url: "https://pitchwall.co/submit" },
+                              { name: "CrazyAboutStartups", url: "https://crazyaboutstartups.com/submit-startup/" },
+                              { name: "AI Valley", url: "https://aivalley.ai/submit-tool/" },
+                              { name: "TopAI.tools", url: "https://topai.tools/submit" },
+                              { name: "GPT Store", url: "https://chatgpt.com/gpts" },
+                              { name: "AiTools.fyi", url: "https://aitools.fyi/submit" },
+                              { name: "Tools.so", url: "https://tools.so/submit" },
+                              { name: "StartupBase", url: "https://startupbase.io/submit" },
+                              { name: "Startups.fyi", url: "https://www.startups.fyi/submit" },
+                              { name: "Reddit r/SaaS", url: "https://www.reddit.com/r/SaaS/submit" },
+                              { name: "Reddit r/SideProject", url: "https://www.reddit.com/r/SideProject/submit" },
+                              { name: "Reddit r/Entrepreneur", url: "https://www.reddit.com/r/Entrepreneur/submit" },
+                              { name: "Reddit r/Startups", url: "https://www.reddit.com/r/startups/submit" }
+                            ];
+                            
+                            const planLimit = userPlan === "PRO" ? 53 : userPlan === "STARTER" ? 30 : 10;
+                            
+                            return ALL_DIRECTORIES.map((dir, idx) => {
+                              const dbSub = submissions.find((s) => s.directory_name === dir.name);
+                              const status = dbSub ? dbSub.status : "pending";
+                              const screenshot_url = dbSub ? dbSub.screenshot_url : null;
+                              const isLocked = idx >= planLimit;
                               
-                              <div>
-                                {(sub.status === "pending" || sub.status === "failed") && (
-                                  <button
-                                    onClick={() => window.open(sub.directory_url, "_blank")}
-                                    disabled={isSubmittingDirectoryName === sub.directory_name}
-                                    className="px-2.5 py-1.5 text-sm bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 hover:bg-zinc-800 dark:hover:bg-zinc-100 font-semibold rounded-xl disabled:opacity-50 transition-all duration-300 ease-out flex items-center gap-1 shadow-sm"
-                                  >
-                                    {isSubmittingDirectoryName === sub.directory_name ? (
+                              return (
+                                <div 
+                                  key={dir.name} 
+                                  className={`p-4 border border-zinc-200/60 dark:border-white/[0.08] rounded-[20px] bg-white dark:bg-[#0D0F12] flex items-center justify-between gap-6 transition-all duration-500 ${isLocked ? "opacity-60 grayscale hover:grayscale-0" : "shadow-[0_4px_24px_rgba(0,0,0,0.03)] hover:shadow-[0_12px_40px_rgba(0,0,0,0.06)]"}`}
+                                >
+                                  <div className="min-w-0 flex-1">
+                                    <div className="flex items-center gap-2">
+                                      <span className="font-semibold text-sm text-zinc-950 dark:text-[#f8f9fa] flex items-center gap-2">
+                                        {isLocked && <span className="text-xs">🔒</span>}
+                                        {dir.name}
+                                      </span>
+                                      {!isLocked && (
+                                        <span className={`px-2 py-0.5 text-[9px] font-bold rounded-xl  tracking-wider ${
+                                          status === "submitted"
+                                            ? "bg-teal-50 dark:bg-teal-950/30 text-teal-700 dark:text-emerald-300"
+                                            : status === "failed"
+                                            ? "bg-red-100 dark:bg-red-950/30 text-red-800 dark:text-red-300"
+                                            : "bg-zinc-100 dark:bg-white/[0.04] text-zinc-600 dark:text-[#8b919e]"
+                                        }`}>
+                                          {status}
+                                        </span>
+                                      )}
+                                    </div>
+                                    <a 
+                                      href={dir.url} 
+                                      target="_blank" 
+                                      rel="noopener noreferrer" 
+                                      className="text-[10px]  text-zinc-405 dark:text-[#6e7583] hover:text-zinc-950 dark:hover:text-white underline mt-1 block truncate"
+                                    >
+                                      {dir.url}
+                                    </a>
+                                  </div>
+                                  
+                                  <div>
+                                    {isLocked ? (
+                                      <button
+                                        onClick={() => {
+                                          setUpgradeMessage("Upgrade to Pro to unlock all 53 automated startup directories!");
+                                          setShowUpgradeModal(true);
+                                        }}
+                                        className="px-3 py-1.5 text-xs bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/40 font-semibold rounded-xl transition-all duration-300 ease-out border border-amber-200 dark:border-amber-900/50 flex items-center gap-1.5"
+                                      >
+                                        Unlock Directory
+                                      </button>
+                                    ) : (
                                       <>
-                                        <span className="w-3 h-3 rounded-full border-2 border-zinc-500 border-t-transparent animate-spin"></span>
-                                        Submitting...
+                                        {(status === "pending" || status === "failed") && (
+                                          <button
+                                            onClick={() => window.open(dir.url, "_blank")}
+                                            disabled={isSubmittingDirectoryName === dir.name}
+                                            className="px-2.5 py-1.5 text-sm bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 hover:bg-zinc-800 dark:hover:bg-zinc-100 font-semibold rounded-xl disabled:opacity-50 transition-all duration-300 ease-out flex items-center gap-1 shadow-sm"
+                                          >
+                                            {isSubmittingDirectoryName === dir.name ? (
+                                              <>
+                                                <span className="w-3 h-3 rounded-full border-2 border-zinc-500 border-t-transparent animate-spin"></span>
+                                                Submitting...
+                                              </>
+                                            ) : "Submit"}
+                                          </button>
+                                        )}
+                                        {status === "submitted" && screenshot_url && (
+                                          <a
+                                            href={`${API_URL}${screenshot_url}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="px-2.5 py-1.5 text-sm border border-zinc-200/60 dark:border-white/[0.04] hover:bg-zinc-100 dark:hover:bg-zinc-850 font-semibold rounded-xl text-zinc-700 dark:text-[#aab1be] text-center block bg-white dark:bg-[#0F1115] shadow-sm"
+                                          >
+                                            Screenshot Receipt 📸
+                                          </a>
+                                        )}
                                       </>
-                                    ) : "Submit"}
-                                  </button>
-                                )}
-                                {sub.status === "submitted" && sub.screenshot_url && (
-                                  <a
-                                    href={`${API_URL}${sub.screenshot_url}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="px-2.5 py-1.5 text-sm border border-zinc-200/60 dark:border-white/[0.04] hover:bg-zinc-100 dark:hover:bg-zinc-850 font-semibold rounded-xl text-zinc-700 dark:text-[#aab1be] text-center block bg-white dark:bg-[#0F1115] shadow-sm"
-                                  >
-                                    Screenshot Receipt 📸
-                                  </a>
-                                )}
-                              </div>
-                            </div>
-                          ))}
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            });
+                          })()}
                         </div>
                       )}
                     </div>
@@ -1755,7 +1873,39 @@ export default function Dashboard() {
                         <div className="h-px bg-zinc-200 dark:bg-white/[0.06] flex-1"></div>
                       </div>
 
-                      {!selectedBlog ? (
+                      {isGeneratingBlog ? (
+                        <div className="flex-1 min-h-[500px] p-10 rounded-2xl border border-zinc-200/80 dark:border-white/[0.08] bg-white dark:bg-[#0D0F12] shadow-sm flex flex-col items-center justify-center text-center relative overflow-hidden group">
+                          {/* Animated concentric rings */}
+                          <div className="relative w-24 h-24 mx-auto flex items-center justify-center mb-8">
+                            <div className="absolute inset-0 rounded-full border-4 border-zinc-100 dark:border-white/[0.02]"></div>
+                            <div className="absolute inset-0 rounded-full border-4 border-t-indigo-500 animate-[spin_1s_linear_infinite]"></div>
+                            <div className="absolute inset-2 rounded-full border-4 border-b-purple-500 animate-[spin_1.5s_linear_infinite_reverse]"></div>
+                            <div className="absolute inset-4 rounded-full border-4 border-l-pink-500 animate-[spin_2s_linear_infinite]"></div>
+                            <span className="text-3xl animate-bounce">✍️</span>
+                          </div>
+                          
+                          <h4 className="font-semibold text-zinc-900 dark:text-white text-xl tracking-tight mb-3 flex items-center justify-center gap-2">
+                            <span className="animate-pulse text-indigo-500">⚡</span> Gemini 3.5 Flash is Drafting...
+                          </h4>
+                          <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed max-w-md mx-auto">
+                            Our AI agent is currently synthesizing market data, structuring high-converting HTML backlinks, and weaving your target keywords into a technical B2B article.
+                          </p>
+                          
+                          {/* Animated Skeleton Wireframe */}
+                          <div className="w-full max-w-md mt-10 space-y-4 opacity-50">
+                            <div className="h-6 bg-zinc-200 dark:bg-white/[0.08] rounded w-1/2 mx-auto animate-pulse"></div>
+                            <div className="space-y-2 pt-2">
+                              <div className="h-3 bg-zinc-100 dark:bg-white/[0.04] rounded w-full animate-pulse" style={{ animationDelay: "100ms" }}></div>
+                              <div className="h-3 bg-zinc-100 dark:bg-white/[0.04] rounded w-11/12 mx-auto animate-pulse" style={{ animationDelay: "200ms" }}></div>
+                              <div className="h-3 bg-zinc-100 dark:bg-white/[0.04] rounded w-4/5 mx-auto animate-pulse" style={{ animationDelay: "300ms" }}></div>
+                            </div>
+                            <div className="space-y-2 pt-4">
+                              <div className="h-3 bg-zinc-100 dark:bg-white/[0.04] rounded w-full animate-pulse" style={{ animationDelay: "400ms" }}></div>
+                              <div className="h-3 bg-zinc-100 dark:bg-white/[0.04] rounded w-5/6 mx-auto animate-pulse" style={{ animationDelay: "500ms" }}></div>
+                            </div>
+                          </div>
+                        </div>
+                      ) : !selectedBlog ? (
                         /* Polished Onboarding State */
                         <div className="flex-1 min-h-[500px] p-10 rounded-2xl border border-dashed border-zinc-200/80 dark:border-white/[0.08] bg-zinc-50/50 dark:bg-zinc-900/10 flex flex-col items-center justify-center text-center relative overflow-hidden group">
                           <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjEiIGZpbGw9InJnYmEoMTUwLDE1MCwxNTAsMC4xNSkiLz48L3N2Zz4=')] [mask-image:linear-gradient(to_bottom,white,transparent)]"></div>
@@ -1785,7 +1935,7 @@ export default function Dashboard() {
                             <div className="flex-1 p-8 md:p-12 border border-zinc-200/80 dark:border-white/[0.08] rounded-2xl bg-white dark:bg-[#0D0F12] shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] transition-all duration-500 flex flex-col h-full relative overflow-hidden group">
                               
                               {/* Metadata & Publisher actions header */}
-                              <div className="flex items-center justify-between border-b border-zinc-100 dark:border-white/[0.04] pb-6 mb-8 flex-wrap gap-4 relative z-10">
+                              <div className="flex items-center justify-between border-b border-zinc-100 dark:border-white/[0.04] pb-6 mb-8 flex-wrap gap-4 relative z-50">
                                 <div className="space-y-1.5">
                                   <div className="text-[10px] font-bold tracking-widest text-zinc-400 dark:text-zinc-500 uppercase">Notion Workspace Sheet</div>
                                   <div className="flex items-center gap-2">
@@ -1793,51 +1943,79 @@ export default function Dashboard() {
                                       Platform: Dev.to
                                     </span>
                                     <span className={`px-2.5 py-1 text-[10px] font-bold rounded-lg tracking-wider ${
-                                      selectedBlog.status === "posted"
+                                      selectedBlog.status.includes("posted")
                                         ? "bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-400 border border-teal-200/30 dark:border-teal-800/30"
                                         : "bg-zinc-100 dark:bg-[#15171C] text-zinc-600 dark:text-zinc-400 border border-zinc-200/60 dark:border-white/[0.04]"
                                     }`}>
-                                      {selectedBlog.status}
+                                      {selectedBlog.status === "posted_both" ? "POSTED (BOTH)" : selectedBlog.status === "posted_devto" ? "POSTED (DEV.TO)" : selectedBlog.status === "posted_linkedin" ? "POSTED (LINKEDIN)" : selectedBlog.status}
                                     </span>
                                   </div>
                                 </div>
                                 
                                 <div>
-                                  {selectedBlog.status === "posted" ? (
+                                  <div className="flex gap-2 items-center">
+                                    {selectedBlog.status.includes("posted") && (
+                                      <div className="px-4 py-2.5 text-sm border border-teal-200 dark:border-teal-900/50 font-semibold rounded-xl text-teal-700 dark:text-teal-400 bg-teal-50 dark:bg-teal-950/30 flex items-center gap-2">
+                                        <svg className="w-4 h-4 text-teal-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                                        Published to {selectedBlog.status === "posted_both" ? "Both" : selectedBlog.status === "posted_devto" ? "Dev.to" : "LinkedIn"}
+                                      </div>
+                                    )}
+                                    
                                     <button
-                                      disabled
-                                      className="px-4 py-2 text-sm border border-zinc-200 dark:border-white/[0.08] font-semibold rounded-xl text-zinc-400 dark:text-zinc-500 bg-zinc-50 dark:bg-[#0A0B0E] flex items-center gap-2 cursor-not-allowed opacity-80"
+                                      onClick={() => {
+                                        navigator.clipboard.writeText(`# ${blogTitle}\n\n${blogBody}`);
+                                        alert("Blog copied to clipboard!");
+                                      }}
+                                      className="px-5 py-2.5 text-sm bg-zinc-100 dark:bg-[#1C1F26] text-zinc-900 dark:text-white hover:bg-zinc-200 dark:hover:bg-[#262A34] font-semibold rounded-xl transition-all duration-300 ease-out flex items-center gap-2"
                                     >
-                                      Published
-                                      <svg className="w-4 h-4 text-teal-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                                      Copy
                                     </button>
-                                  ) : (
-                                    <div className="flex gap-2">
-                                      <button
-                                        onClick={() => {
-                                          navigator.clipboard.writeText(`# ${blogTitle}\n\n${blogBody}`);
-                                          alert("Blog copied to clipboard!");
-                                        }}
-                                        className="px-5 py-2.5 text-sm bg-zinc-100 dark:bg-[#1C1F26] text-zinc-900 dark:text-white hover:bg-zinc-200 dark:hover:bg-[#262A34] font-semibold rounded-xl transition-all duration-300 ease-out flex items-center gap-2"
-                                      >
-                                        Copy
-                                      </button>
-                                      <button
-                                        onClick={() => handlePublishBlog(selectedBlog.id)}
-                                        disabled={isGeneratingBlog}
-                                        className="px-5 py-2.5 text-sm bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 hover:bg-zinc-800 dark:hover:bg-zinc-100 font-semibold rounded-xl disabled:opacity-50 transition-all duration-300 ease-out flex items-center gap-2 shadow-[0_2px_10px_rgba(0,0,0,0.08)] dark:shadow-[0_2px_10px_rgba(255,255,255,0.08)] hover:shadow-[0_4px_16px_rgba(0,0,0,0.12)] hover:-translate-y-0.5"
-                                      >
-                                        {isGeneratingBlog ? (
-                                          <>
-                                            <span className="w-4 h-4 rounded-full border-2 border-white/20 dark:border-zinc-900/20 border-t-white dark:border-t-zinc-900 animate-spin"></span>
-                                            Publishing...
-                                          </>
-                                        ) : (
-                                          <>Publish ↗</>
-                                        )}
-                                      </button>
-                                    </div>
-                                  )}
+                                    
+                                    {selectedBlog.status !== "posted_both" && (
+                                      <div className="relative group/dropdown">
+                                        <button
+                                          disabled={isGeneratingBlog}
+                                          className="px-5 py-2.5 text-sm bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 hover:bg-zinc-800 dark:hover:bg-zinc-100 font-semibold rounded-xl disabled:opacity-50 transition-all duration-300 ease-out flex items-center gap-2 shadow-[0_2px_10px_rgba(0,0,0,0.08)] dark:shadow-[0_2px_10px_rgba(255,255,255,0.08)] hover:shadow-[0_4px_16px_rgba(0,0,0,0.12)] hover:-translate-y-0.5"
+                                        >
+                                          {isGeneratingBlog ? (
+                                            <>
+                                              <span className="w-4 h-4 rounded-full border-2 border-white/20 dark:border-zinc-900/20 border-t-white dark:border-t-zinc-900 animate-spin"></span>
+                                              Publishing...
+                                            </>
+                                          ) : (
+                                            <>
+                                              Publish
+                                              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
+                                            </>
+                                          )}
+                                        </button>
+                                        
+                                        {/* Dropdown Menu Wrapper (pt-2 creates safe hover bridge) */}
+                                        <div className="absolute right-0 top-full pt-2 w-56 opacity-0 invisible group-hover/dropdown:opacity-100 group-hover/dropdown:visible transition-all duration-200 z-50">
+                                          <div className="bg-white dark:bg-[#12141A] border border-zinc-200 dark:border-white/[0.06] rounded-xl shadow-xl overflow-hidden translate-y-1 group-hover/dropdown:translate-y-0 transition-transform duration-200">
+                                            {!selectedBlog.status.includes("devto") && (
+                                              <button 
+                                                onClick={() => handlePublishBlog(selectedBlog.id, "dev.to")}
+                                                className="w-full text-left px-4 py-3 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-white/[0.03] transition-colors flex items-center gap-3"
+                                              >
+                                                <span className="w-5 h-5 flex items-center justify-center bg-zinc-900 text-white rounded font-bold text-[10px]">DEV</span>
+                                                Publish to Dev.to
+                                              </button>
+                                            )}
+                                            {!selectedBlog.status.includes("linkedin") && (
+                                              <button 
+                                                onClick={() => handlePublishBlog(selectedBlog.id, "linkedin")}
+                                                className="w-full text-left px-4 py-3 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-white/[0.03] transition-colors flex items-center gap-3 border-t border-zinc-100 dark:border-white/[0.04]"
+                                              >
+                                                <span className="w-5 h-5 flex items-center justify-center bg-[#0a66c2] text-white rounded font-bold text-[10px]">in</span>
+                                                Publish to LinkedIn
+                                              </button>
+                                            )}
+                                          </div>
+                                        </div>
+                                      </div>
+                                    )}
+                                  </div>
                                 </div>
                               </div>
                               
