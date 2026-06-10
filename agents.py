@@ -1019,24 +1019,23 @@ async def scan_hackernews_leads(product_data: dict, testimonials: list, target_k
 
 def scrape_reddit_stealth(keyword: str):
     """
-    Agent that bypasses Reddit's API blocks by querying DuckDuckGo.
+    Agent that bypasses Reddit's API blocks by querying Tavily AI Search.
     """
-    from duckduckgo_search import DDGS
+    from tavily import TavilyClient
+    import os
     discussions = []
     try:
-        print(f"--- STARTING AUTONOMOUS REDDIT SEARCH FOR '{keyword}' via DDGS ---")
-        with DDGS() as ddgs:
-            results = list(ddgs.text(f'site:reddit.com "{keyword}"', max_results=3))
-            for r in results:
-                title = r.get("title", "")
-                url = r.get("href", "")
-                snippet = r.get("body", "")
-                if url and "reddit.com" in url:
-                    discussions.append({
-                        "title": title,
-                        "url": url,
-                        "body": snippet
-                    })
+        print(f"--- STARTING AUTONOMOUS REDDIT SEARCH FOR '{keyword}' via TAVILY ---")
+        client = TavilyClient(api_key=os.getenv("TAVILY_API_KEY", "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"))
+        response = client.search(query=f'site:reddit.com "{keyword}"', search_depth="basic", max_results=3)
+        for r in response.get("results", []):
+            url = r.get("url", "")
+            if url and "reddit.com" in url:
+                discussions.append({
+                    "title": r.get("title", "Reddit Thread"),
+                    "url": url,
+                    "body": r.get("content", "")
+                })
     except Exception as e:
         print(f"--- REDDIT SCRAPING FAILED: {str(e)} ---")
         
@@ -1067,24 +1066,23 @@ async def scan_reddit_leads(product_data: dict, testimonials: list, target_keywo
 
 def scrape_twitter_stealth(keyword: str, user_id: int = 1):
     """
-    Agent that bypasses Twitter's login wall by querying DuckDuckGo for Twitter discussions.
+    Agent that bypasses Twitter's login wall by querying Tavily AI Search.
     """
-    from duckduckgo_search import DDGS
+    from tavily import TavilyClient
+    import os
     discussions = []
     try:
-        print(f"--- STARTING AUTONOMOUS TWITTER SEARCH FOR '{keyword}' via DDGS ---")
-        with DDGS() as ddgs:
-            results = list(ddgs.text(f'site:twitter.com "{keyword}"', max_results=3))
-            for r in results:
-                title = r.get("title", "")
-                url = r.get("href", "")
-                snippet = r.get("body", "")
-                if url and ("twitter.com" in url or "x.com" in url):
-                    discussions.append({
-                        "title": title,
-                        "url": url,
-                        "body": snippet
-                    })
+        print(f"--- STARTING AUTONOMOUS TWITTER SEARCH FOR '{keyword}' via TAVILY ---")
+        client = TavilyClient(api_key=os.getenv("TAVILY_API_KEY", "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"))
+        response = client.search(query=f'site:twitter.com OR site:x.com "{keyword}"', search_depth="basic", max_results=3)
+        for r in response.get("results", []):
+            url = r.get("url", "")
+            if url and ("twitter.com" in url or "x.com" in url):
+                discussions.append({
+                    "title": r.get("title", "Tweet"),
+                    "url": url,
+                    "body": r.get("content", "")
+                })
     except Exception as e:
         print(f"--- TWITTER SCRAPING FAILED: {str(e)} ---")
             
@@ -1116,24 +1114,23 @@ async def scan_twitter_leads(product_data: dict, testimonials: list, target_keyw
 
 def scrape_linkedin_stealth(keyword: str, user_id: int = 1):
     """
-    Agent that bypasses LinkedIn's aggressive login wall by querying DuckDuckGo.
+    Agent that bypasses LinkedIn's aggressive login wall by querying Tavily AI Search.
     """
-    from duckduckgo_search import DDGS
+    from tavily import TavilyClient
+    import os
     discussions = []
     try:
-        print(f"--- STARTING AUTONOMOUS LINKEDIN SEARCH FOR '{keyword}' via DDGS ---")
-        with DDGS() as ddgs:
-            results = list(ddgs.text(f'site:linkedin.com/posts "{keyword}"', max_results=3))
-            for r in results:
-                title = r.get("title", "")
-                url = r.get("href", "")
-                snippet = r.get("body", "")
-                if url and "linkedin.com" in url:
-                    discussions.append({
-                        "title": title,
-                        "url": url,
-                        "body": snippet
-                    })
+        print(f"--- STARTING AUTONOMOUS LINKEDIN SEARCH FOR '{keyword}' via TAVILY ---")
+        client = TavilyClient(api_key=os.getenv("TAVILY_API_KEY", "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"))
+        response = client.search(query=f'site:linkedin.com/posts "{keyword}"', search_depth="basic", max_results=3)
+        for r in response.get("results", []):
+            url = r.get("url", "")
+            if url and "linkedin.com" in url:
+                discussions.append({
+                    "title": r.get("title", "LinkedIn Post"),
+                    "url": url,
+                    "body": r.get("content", "")
+                })
     except Exception as e:
         print(f"--- LINKEDIN SCRAPING FAILED: {str(e)} ---")
             
